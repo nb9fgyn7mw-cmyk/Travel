@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wander Map — Trip & Savings Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF3F6;--paper:#FFFFFF;--ink:#14263D;--muted:#5B6A7B;--line:#D6DFE7;
+  --coral:#D9546F;--teal:#1F7A78;--gold:#A87A1F;--sky:#D7E7F2;--land:#C3D2DE;
+  --coral-soft:#FBE4E9;--teal-soft:#DDF0EE;--gold-soft:#F6ECD6;
+  --serif:"Young Serif",Georgia,"Times New Roman",serif;
+  --sans:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1826;--paper:#162336;--ink:#E7EDF3;--muted:#9AA9B9;--line:#2A3B51;
+    --coral:#F0849A;--teal:#58B9B3;--gold:#E2B456;--sky:#1A2B42;--land:#2E4460;
+    --coral-soft:#3A2230;--teal-soft:#183533;--gold-soft:#352C18;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1826;--paper:#162336;--ink:#E7EDF3;--muted:#9AA9B9;--line:#2A3B51;
+  --coral:#F0849A;--teal:#58B9B3;--gold:#E2B456;--sky:#1A2B42;--land:#2E4460;
+  --coral-soft:#3A2230;--teal-soft:#183533;--gold-soft:#352C18;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5}
+img,svg{max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1100px;margin:0 auto;padding:16px 16px 96px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 16px}
+.brand{font-family:var(--serif);font-size:1.6rem;line-height:1.1;margin:0}
+.sync{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.sync b{font-weight:600;color:var(--teal)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav.tabs button{flex:1;max-width:220px;background:none;border:0;padding:12px 8px;font-weight:600;font-size:.95rem;color:var(--muted);cursor:pointer;border-top:3px solid transparent}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-top-color:var(--coral)}
+@media (min-width:760px){
+  nav.tabs{position:sticky;top:0;bottom:auto;border-top:0;border-bottom:1px solid var(--line);background:var(--bg);padding-top:env(safe-area-inset-top,0px)}
+  nav.tabs button{border-top:0;border-bottom:3px solid transparent}
+  nav.tabs button[aria-selected="true"]{border-bottom-color:var(--coral)}
+  .wrap{padding-bottom:48px}
+}
+h2{font-family:var(--serif);font-weight:400;font-size:1.35rem;margin:0 0 12px}
+h3{font-size:1rem;margin:0 0 8px;font-weight:700}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px}
+.grid{display:grid;gap:16px}
+@media (min-width:860px){.grid.two{grid-template-columns:1.4fr 1fr}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:9px 16px;font-weight:600;cursor:pointer;font-size:.92rem}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.danger{color:var(--coral);border-color:var(--coral)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+
+/* Boarding pass hero */
+.pass{display:grid;grid-template-columns:1fr;border-radius:18px;overflow:hidden;background:var(--paper);border:1px solid var(--line);margin-bottom:16px}
+@media (min-width:640px){.pass{grid-template-columns:1fr 220px}}
+.pass-main{padding:20px;position:relative}
+.pass-stub{padding:20px;background:var(--ink);color:var(--paper);display:flex;flex-direction:column;justify-content:center;gap:4px;position:relative}
+@media (min-width:640px){.pass-stub{border-left:2px dashed var(--bg)}}
+@media (max-width:639px){.pass-stub{border-top:2px dashed var(--bg)}}
+.pass-label{font-size:.8rem;opacity:.75}
+.pass-dest{font-family:var(--serif);font-size:clamp(2rem,7vw,3.2rem);line-height:1.05;margin:4px 0 6px;overflow-wrap:anywhere}
+.pass-meta{display:flex;flex-wrap:wrap;gap:16px 28px;margin-top:12px}
+.pass-meta div span{display:block;font-size:.8rem;color:var(--muted)}
+.pass-meta div strong{font-size:1.05rem}
+.pass-days{font-family:var(--serif);font-size:2.6rem;line-height:1}
+.empty-pass{padding:28px 20px}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+@media (min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px}
+.stat span{display:block;font-size:.82rem;color:var(--muted)}
+.stat strong{font-size:1.3rem;font-weight:700}
+
+/* Map */
+#map{height:320px;border-radius:12px;background:var(--sky);overflow:hidden;position:relative}
+@media (min-width:860px){#map{height:380px}}
+.jvm-tooltip{position:absolute;display:none;background:var(--ink);color:var(--paper);font-family:var(--sans);font-size:.85rem;padding:4px 8px;border-radius:6px;pointer-events:none;z-index:5;white-space:nowrap}
+.jvm-tooltip.active{display:block}
+.jvm-zoom-btn{position:absolute;left:10px;width:28px;height:28px;line-height:26px;text-align:center;border-radius:8px;background:var(--paper);color:var(--ink);border:1px solid var(--line);cursor:pointer;font-weight:700;user-select:none}
+.jvm-zoom-btn.jvm-zoomin{top:10px}.jvm-zoom-btn.jvm-zoomout{top:44px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:.85rem;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+/* Savings meter */
+.meter{height:12px;border-radius:999px;background:var(--line);overflow:hidden}
+.meter > i{display:block;height:100%;background:var(--teal);border-radius:999px;transition:width .4s}
+.meter.warn > i{background:var(--coral)}
+.alert{border-radius:12px;padding:10px 12px;font-size:.92rem;margin-top:10px}
+.alert.warn{background:var(--coral-soft)}
+.alert.ok{background:var(--teal-soft)}
+.alert.info{background:var(--gold-soft)}
+
+/* Timeline */
+.tl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tl{min-width:760px;position:relative}
+.tl-months{display:grid;border-bottom:1px solid var(--line);font-size:.75rem;color:var(--muted)}
+.tl-months div{padding:4px 2px;border-left:1px solid var(--line);white-space:nowrap;overflow:hidden}
+.tl-months div.year{color:var(--ink);font-weight:700}
+.tl-rows{position:relative;padding:8px 0}
+.tl-row{position:relative;height:30px;margin:4px 0}
+.tl-bar{position:absolute;top:0;height:30px;border-radius:8px;padding:0 8px;font-size:.8rem;font-weight:600;line-height:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border:0;color:#fff;min-width:14px;text-align:left}
+.tl-today{position:absolute;top:0;bottom:0;width:2px;background:var(--coral)}
+
+/* Trip list */
+.trip-list{display:grid;gap:12px}
+@media (min-width:760px){.trip-list{grid-template-columns:repeat(2,1fr)}}
+.trip-card{background:var(--paper);border:1px solid var(--line);border-left:6px solid var(--teal);border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;width:100%}
+.trip-card h3{font-family:var(--serif);font-weight:400;font-size:1.2rem;margin:0}
+.chip{display:inline-block;font-size:.75rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;margin-top:6px}
+.kv span{color:var(--muted)}
+.flag{color:var(--coral);font-weight:600;font-size:.82rem;margin-top:6px}
+
+/* Sheet / editor */
+.sheet-bg{position:fixed;inset:0;background:rgba(10,20,35,.45);z-index:50;display:none}
+.sheet-bg.open{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;top:env(safe-area-inset-top,0px);margin:0 auto;max-width:760px;background:var(--bg);z-index:60;display:none;flex-direction:column;border-radius:18px 18px 0 0;overflow:hidden}
+@media (min-width:760px){.sheet{top:5vh;bottom:5vh;border-radius:18px}}
+.sheet.open{display:flex}
+.sheet-head{display:flex;align-items:center;gap:8px;padding:14px 16px;background:var(--paper);border-bottom:1px solid var(--line)}
+.sheet-head h2{margin:0;flex:1;font-size:1.2rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-body{overflow-y:auto;padding:16px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));display:grid;gap:16px}
+label.f{display:block;font-size:.85rem;font-weight:600;margin-bottom:10px}
+label.f input,label.f select,label.f textarea{display:block;width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-weight:400;font-size:16px}
+label.f textarea{min-height:80px;resize:vertical}
+.fields{display:grid;gap:0 12px}
+@media (min-width:520px){.fields.c2{grid-template-columns:1fr 1fr}}
+.suggest{position:relative}
+.suggest-list{position:absolute;left:0;right:0;top:100%;z-index:5;background:var(--paper);border:1px solid var(--line);border-radius:10px;max-height:220px;overflow:auto;display:none;margin-top:-6px}
+.suggest-list.open{display:block}
+.suggest-list button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;cursor:pointer}
+.suggest-list button:hover,.suggest-list button:focus{background:var(--bg)}
+.cat-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.cat-table th,.cat-table td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+.cat-table th:first-child,.cat-table td:first-child{text-align:left}
+.cat-table input{width:100%;max-width:120px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);text-align:right;font-size:16px}
+.cat-table .over{color:var(--coral);font-weight:700}
+.log{display:grid;gap:8px}
+.log-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.log-row input,.log-row select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px}
+.log-row .note{grid-column:1/-1}
+.log-row .del{grid-column:1/-1;justify-self:end}
+@media (min-width:620px){
+  .log-row{grid-template-columns:140px 130px 1fr auto;align-items:center}
+  .log-row.exp{grid-template-columns:140px 150px 110px 1fr auto}
+  .log-row .note{grid-column:auto}.log-row .del{grid-column:auto}
+}
+.colors{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.colors button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+.colors button[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--paper) inset}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-size:.9rem;z-index:80;display:none}
+.toast.show{display:block}
+.hidden{display:none !important}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">Wander Map</h1>
+    <div class="sync" id="sync" aria-live="polite">Loading…</div>
+  </header>
+</div>
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="dash" aria-selected="true">Dashboard</button>
+  <button role="tab" data-tab="trips" aria-selected="false">Trips</button>
+  <button role="tab" data-tab="settings" aria-selected="false">Goals & settings</button>
+</nav>
+<main class="wrap" style="padding-top:16px">
+  <section id="tab-dash"></section>
+  <section id="tab-trips" class="hidden"></section>
+  <section id="tab-settings" class="hidden"></section>
+</main>
+
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-head">
+    <button class="btn ghost" id="sheetClose" aria-label="Close">Done</button>
+    <h2 id="sheetTitle">Trip</h2>
+    <button class="btn danger" id="sheetDelete">Delete</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/js/jsvectormap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ---------- Reference data ---------- */
+const CATS=[["transport","Flights & transport"],["lodging","Lodging"],["food","Food & activities"],["shopping","Shopping & souvenirs"]];
+const STATUS={dream:{label:"Dream",c:"--gold"},planning:{label:"Planning",c:"--teal"},booked:{label:"Booked",c:"--coral"},done:{label:"Completed",c:"--muted"}};
+const COLORS=["#1F7A78","#D9546F","#A87A1F","#5B6FD6","#8A5BB8","#2E8B57","#C2603A","#3D7FB0"];
+const CITIES=[["Paris","France",48.86,2.35],["Nice","France",43.70,7.27],["Lyon","France",45.76,4.84],["London","United Kingdom",51.51,-0.13],["Edinburgh","United Kingdom",55.95,-3.19],["Oxford","United Kingdom",51.75,-1.26],["Dublin","Ireland",53.35,-6.26],["Rome","Italy",41.90,12.50],["Florence","Italy",43.77,11.26],["Venice","Italy",45.44,12.32],["Milan","Italy",45.46,9.19],["Amalfi Coast","Italy",40.63,14.60],["Lake Como","Italy",46.00,9.26],["Barcelona","Spain",41.39,2.17],["Madrid","Spain",40.42,-3.70],["Seville","Spain",37.39,-5.98],["Mallorca","Spain",39.70,2.95],["Lisbon","Portugal",38.72,-9.14],["Porto","Portugal",41.16,-8.63],["Amsterdam","Netherlands",52.37,4.90],["Brussels","Belgium",50.85,4.35],["Bruges","Belgium",51.21,3.22],["Berlin","Germany",52.52,13.40],["Munich","Germany",48.14,11.58],["Vienna","Austria",48.21,16.37],["Salzburg","Austria",47.81,13.04],["Zurich","Switzerland",47.38,8.54],["Interlaken","Switzerland",46.69,7.86],["Prague","Czech Republic",50.08,14.44],["Budapest","Hungary",47.50,19.04],["Copenhagen","Denmark",55.68,12.57],["Stockholm","Sweden",59.33,18.07],["Oslo","Norway",59.91,10.75],["Bergen","Norway",60.39,5.32],["Reykjavik","Iceland",64.15,-21.94],["Athens","Greece",37.98,23.73],["Santorini","Greece",36.39,25.46],["Mykonos","Greece",37.45,25.33],["Dubrovnik","Croatia",42.65,18.09],["Split","Croatia",43.51,16.44],["Istanbul","Turkey",41.01,28.98],["Krakow","Poland",50.06,19.94],["Edinburgh","Scotland",55.95,-3.19],["New York City","USA",40.71,-74.01],["Los Angeles","USA",34.05,-118.24],["San Francisco","USA",37.77,-122.42],["Chicago","USA",41.88,-87.63],["Miami","USA",25.76,-80.19],["Orlando","USA",28.54,-81.38],["Las Vegas","USA",36.17,-115.14],["Nashville","USA",36.16,-86.78],["New Orleans","USA",29.95,-90.07],["Washington, D.C.","USA",38.91,-77.04],["Boston","USA",42.36,-71.06],["Seattle","USA",47.61,-122.33],["Honolulu","USA",21.31,-157.86],["Maui","USA",20.80,-156.33],["Savannah","USA",32.08,-81.09],["Charleston","USA",32.78,-79.93],["Austin","USA",30.27,-97.74],["San Diego","USA",32.72,-117.16],["Denver","USA",39.74,-104.99],["Grand Canyon","USA",36.11,-112.11],["Yellowstone","USA",44.43,-110.59],["Anchorage","USA",61.22,-149.90],["Toronto","Canada",43.65,-79.38],["Vancouver","Canada",49.28,-123.12],["Montreal","Canada",45.50,-73.57],["Quebec City","Canada",46.81,-71.21],["Banff","Canada",51.18,-115.57],["Mexico City","Mexico",19.43,-99.13],["Cancún","Mexico",21.16,-86.85],["Tulum","Mexico",20.21,-87.47],["Cabo San Lucas","Mexico",22.89,-109.92],["Puerto Vallarta","Mexico",20.65,-105.23],["San Juan","Puerto Rico",18.47,-66.11],["Nassau","Bahamas",25.04,-77.35],["Montego Bay","Jamaica",18.47,-77.92],["Punta Cana","Dominican Republic",18.58,-68.40],["Aruba","Aruba",12.52,-70.03],["St. Lucia","St. Lucia",13.91,-60.98],["Havana","Cuba",23.11,-82.37],["San José","Costa Rica",9.93,-84.08],["Panama City","Panama",8.98,-79.52],["Cartagena","Colombia",10.39,-75.48],["Medellín","Colombia",6.24,-75.58],["Lima","Peru",-12.05,-77.04],["Cusco","Peru",-13.53,-71.97],["Rio de Janeiro","Brazil",-22.91,-43.17],["Buenos Aires","Argentina",-34.60,-58.38],["Santiago","Chile",-33.45,-70.67],["Patagonia","Argentina",-50.34,-72.26],["Galápagos","Ecuador",-0.74,-90.31],["Tokyo","Japan",35.68,139.69],["Kyoto","Japan",35.01,135.77],["Osaka","Japan",34.69,135.50],["Seoul","South Korea",37.57,126.98],["Taipei","Taiwan",25.03,121.57],["Hong Kong","China",22.32,114.17],["Shanghai","China",31.23,121.47],["Singapore","Singapore",1.35,103.82],["Bangkok","Thailand",13.76,100.50],["Phuket","Thailand",7.88,98.39],["Hanoi","Vietnam",21.03,105.85],["Ho Chi Minh City","Vietnam",10.82,106.63],["Bali","Indonesia",-8.34,115.09],["Manila","Philippines",14.60,120.98],["Palawan","Philippines",9.84,118.74],["Kuala Lumpur","Malaysia",3.14,101.69],["Maldives","Maldives",3.20,73.22],["Dubai","UAE",25.20,55.27],["Jerusalem","Israel",31.77,35.21],["Petra","Jordan",30.33,35.44],["Cairo","Egypt",30.04,31.24],["Marrakech","Morocco",31.63,-7.99],["Cape Town","South Africa",-33.92,18.42],["Nairobi","Kenya",-1.29,36.82],["Zanzibar","Tanzania",-6.17,39.20],["Mauritius","Mauritius",-20.35,57.55],["Seychelles","Seychelles",-4.68,55.49],["Sydney","Australia",-33.87,151.21],["Melbourne","Australia",-37.81,144.96],["Cairns","Australia",-16.92,145.77],["Auckland","New Zealand",-36.85,174.76],["Queenstown","New Zealand",-45.03,168.66],["Bora Bora","French Polynesia",-16.50,-151.74],["Fiji","Fiji",-17.71,178.07]];
+
+/* ---------- State ---------- */
+const LS_KEY="wandermap.v1";
+let state=defaultState();
+let mode="local", saveTimer=null, editingId=null;
+
+function defaultState(){return{settings:{currency:"$",capacity:0,horizon:24,goal:"",goalAmount:0,theme:"auto"},trips:[]};}
+function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);}
+function num(v){const n=parseFloat(v);return isFinite(n)?n:0;}
+function normalize(s){
+  const d=defaultState();
+  if(!s||typeof s!=="object")return d;
+  const st=Object.assign(d.settings,s.settings||{});
+  const trips=Array.isArray(s.trips)?s.trips.map(t=>({
+    id:t.id||uid(),name:String(t.name||""),dest:String(t.dest||""),country:String(t.country||""),
+    lat:(t.lat===""||t.lat==null)?null:num(t.lat),lng:(t.lng===""||t.lng==null)?null:num(t.lng),
+    start:t.start||"",end:t.end||"",status:STATUS[t.status]?t.status:"dream",priority:["high","medium","low"].includes(t.priority)?t.priority:"medium",
+    color:t.color||COLORS[0],travelers:Math.max(1,parseInt(t.travelers)||1),
+    budget:Object.assign({transport:0,lodging:0,food:0,shopping:0},t.budget||{}),
+    saved:Array.isArray(t.saved)?t.saved:[],expenses:Array.isArray(t.expenses)?t.expenses:[],notes:String(t.notes||"")
+  })):[];
+  return{settings:st,trips};
+}
+
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function money(n,dec){const c=state.settings.currency||"$";const v=Math.round(num(n)*100)/100;return c+v.toLocaleString(undefined,{minimumFractionDigits:dec?2:0,maximumFractionDigits:dec?2:0});}
+function parseDate(s){if(!s)return null;const p=s.split("-").map(Number);if(p.length!==3||p.some(isNaN))return null;return new Date(p[0],p[1]-1,p[2]);}
+function today(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+function fmtDate(s){const d=parseDate(s);return d?d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}):"No date yet";}
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function sum(a,f){return a.reduce((s,x)=>s+num(f?f(x):x),0);}
+
+function calc(t){
+  const budget=sum(CATS.map(c=>t.budget[c[0]]));
+  const saved=sum(t.saved,x=>x.amount);
+  const spent=sum(t.expenses,x=>x.amount);
+  const spentBy={};CATS.forEach(c=>spentBy[c[0]]=sum(t.expenses.filter(e=>e.cat===c[0]),e=>e.amount));
+  const remaining=Math.max(0,budget-saved);
+  const s=parseDate(t.start),now=today();
+  let daysLeft=null,monthsLeft=null,monthly=0,dueState="nodate";
+  if(s){
+    daysLeft=Math.round((s-now)/86400000);
+    if(t.status==="done"){dueState="done";}
+    else if(daysLeft<0){dueState="past";}
+    else{
+      monthsLeft=(s.getFullYear()-now.getFullYear())*12+(s.getMonth()-now.getMonth());
+      if(s.getDate()<now.getDate())monthsLeft-=1;
+      monthsLeft=Math.max(1,monthsLeft);
+      monthly=remaining/monthsLeft;dueState="ok";
+    }
+  }
+  const pct=budget>0?Math.min(100,saved/budget*100):0;
+  const overCats=CATS.filter(c=>num(t.budget[c[0]])>0?spentBy[c[0]]>num(t.budget[c[0]]):spentBy[c[0]]>0).map(c=>c[1]);
+  return{budget,saved,spent,spentBy,remaining,daysLeft,monthsLeft,monthly,dueState,pct,overCats};
+}
+function activeTrips(){return state.trips.filter(t=>t.status!=="done");}
+function sortedTrips(list){return list.slice().sort((a,b)=>{const da=parseDate(a.start),db=parseDate(b.start);if(!da&&!db)return a.name.localeCompare(b.name);if(!da)return 1;if(!db)return -1;return da-db;});}
+function overlaps(){
+  const list=sortedTrips(activeTrips()).filter(t=>parseDate(t.start));const out=[];
+  for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){
+    const a=list[i],b=list[j];const ae=parseDate(a.end)||parseDate(a.start),bs=parseDate(b.start);
+    if(bs<=ae)out.push([a,b]);
+  }return out;
+}
+function tripTitle(t){return t.name||t.dest||"Untitled trip";}
+function statusColor(t){return cssVar(STATUS[t.status].c);}
+
+/* ---------- Persistence ---------- */
+function setSync(text){$("#sync").innerHTML=text;}
+function scheduleSave(){
+  setSync("Saving…");
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(persist,700);
+}
+function persist(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(state));setSync("<b>Saved</b> in this browser");}
+  catch(e){setSync("Not saving — export a backup");}
+}
+function loadLocal(){try{const raw=localStorage.getItem(LS_KEY);if(raw)return normalize(JSON.parse(raw));}catch(e){}return null;}
+
+function connect(){
+  const local=loadLocal();
+  if(local){state=local;}
+  let ok=false;
+  try{localStorage.setItem("__wm","1");localStorage.removeItem("__wm");ok=true;}catch(e){}
+  mode=ok?"local":"none";
+  applyTheme();renderAll();
+  setSync(ok?"Saved in this browser":"Not saving — export a backup");
+}
+
+/* ---------- Theme ---------- */
+function applyTheme(){
+  const t=state.settings.theme;
+  if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);
+  else document.documentElement.removeAttribute("data-theme");
+}
+
+/* ---------- Tabs ---------- */
+let currentTab="dash";
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>showTab(b.dataset.tab)));
+function showTab(tab){
+  currentTab=tab;
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
+  ["dash","trips","settings"].forEach(k=>$("#tab-"+k).classList.toggle("hidden",k!==tab));
+  if(tab==="dash")renderMap();
+  window.scrollTo({top:0});
+}
+
+function renderAll(){renderDash();renderTrips();renderSettings();}
+
+/* ---------- Dashboard ---------- */
+function renderDash(){
+  const el=$("#tab-dash");
+  const act=activeTrips();
+  const upcoming=sortedTrips(act).filter(t=>{const c=calc(t);return c.dueState==="ok";});
+  const next=upcoming[0];
+  const totals=act.reduce((a,t)=>{const c=calc(t);a.budget+=c.budget;a.saved+=c.saved;a.spent+=c.spent;a.monthly+=c.monthly;return a;},{budget:0,saved:0,spent:0,monthly:0});
+  const cap=num(state.settings.capacity);
+  let pass;
+  if(next){
+    const c=calc(next);
+    pass=`<div class="pass">
+      <div class="pass-main">
+        <div class="pass-label muted">Next trip</div>
+        <div class="pass-dest">${esc(next.dest||tripTitle(next))}</div>
+        <div class="muted">${esc(next.name&&next.dest?next.name:"")}${next.country?(next.name&&next.dest?", ":"")+esc(next.country):""}</div>
+        <div class="pass-meta">
+          <div><span>Departs</span><strong>${fmtDate(next.start)}</strong></div>
+          <div><span>Saved</span><strong>${money(c.saved)} of ${money(c.budget)}</strong></div>
+          <div><span>Set aside monthly</span><strong>${money(c.monthly)}</strong></div>
+        </div>
+      </div>
+      <div class="pass-stub">
+        <div class="pass-label">Days to go</div>
+        <div class="pass-days">${c.daysLeft}</div>
+        <div class="pass-label">${STATUS[next.status].label}</div>
+      </div></div>`;
+  }else{
+    pass=`<div class="pass"><div class="pass-main empty-pass">
+      <div class="pass-dest" style="font-size:2rem">Where to next?</div>
+      <p class="muted">Add a trip with a destination, dates and a budget. The map, timeline and savings plan fill in from there.</p>
+      <div class="row"><button class="btn primary" data-act="add">Add a trip</button>${state.trips.length?"":`<button class="btn" data-act="example">Load an example trip</button>`}</div>
+    </div></div>`;
+  }
+  const capPct=cap>0?Math.min(100,totals.monthly/cap*100):0;
+  let capMsg="";
+  if(cap>0){
+    if(totals.monthly>cap){
+      const low=sortedTrips(act).filter(t=>calc(t).dueState==="ok"&&calc(t).remaining>0).sort((a,b)=>({high:0,medium:1,low:2}[b.priority]-{high:0,medium:1,low:2}[a.priority]))[0];
+      capMsg=`<div class="alert warn">You need ${money(totals.monthly-cap)} more per month than you can save. ${low?`Try moving <b>${esc(tripTitle(low))}</b> (${low.priority} priority) to a later date or trimming its budget.`:""}</div>`;
+    }else capMsg=`<div class="alert ok">You're on track — ${money(cap-totals.monthly)} a month to spare.</div>`;
+  }else capMsg=`<div class="alert info">Add how much you can save each month in Goals & settings to see if your plan fits.</div>`;
+  const ov=overlaps();
+  const ovMsg=ov.length?`<div class="alert warn">Dates overlap: ${ov.map(p=>`<b>${esc(tripTitle(p[0]))}</b> and <b>${esc(tripTitle(p[1]))}</b>`).join("; ")}.</div>`:"";
+  const past=act.filter(t=>calc(t).dueState==="past");
+  const pastMsg=past.length?`<div class="alert info">${past.map(t=>`<b>${esc(tripTitle(t))}</b>`).join(", ")} ${past.length>1?"have":"has"} a start date in the past. Mark ${past.length>1?"them":"it"} completed or pick new dates.</div>`:"";
+  const goalAmt=num(state.settings.goalAmount);
+  const goalBlock=(state.settings.goal||goalAmt)?`<div class="panel"><h2>My travel goal</h2>${state.settings.goal?`<p style="margin:0 0 10px">${esc(state.settings.goal)}</p>`:""}${goalAmt?`<div class="kv"><span>Saved toward ${money(goalAmt)}</span><strong>${money(sum(state.trips,t=>calc(t).saved))}</strong></div><div class="meter" style="margin-top:6px"><i style="width:${Math.min(100,sum(state.trips,t=>calc(t).saved)/goalAmt*100)}%"></i></div>`:""}</div>`:"";
+
+  el.innerHTML=`${pass}
+  <div class="stats">
+    <div class="stat"><span>Trips planned</span><strong>${act.length}</strong></div>
+    <div class="stat"><span>Total budget</span><strong>${money(totals.budget)}</strong></div>
+    <div class="stat"><span>Saved so far</span><strong>${money(totals.saved)}</strong></div>
+    <div class="stat"><span>Save this month</span><strong>${money(totals.monthly)}</strong></div>
+  </div>
+  <div class="grid two" style="margin-bottom:16px">
+    <div class="panel"><h2>Trip map</h2><div id="map" role="img" aria-label="World map of planned trips"></div>
+      <div class="legend">${Object.keys(STATUS).map(k=>`<span><i class="dot" style="background:var(${STATUS[k].c})"></i>${STATUS[k].label}</span>`).join("")}</div>
+      ${state.trips.some(t=>t.lat==null)?`<p class="small muted" style="margin:8px 0 0">Trips without a location don't show on the map. Pick a city from the list or add coordinates in the trip.</p>`:""}
+    </div>
+    <div class="grid" style="align-content:start">
+      <div class="panel"><h2>Monthly savings plan</h2>
+        <div class="kv"><span>Needed per month</span><strong>${money(totals.monthly)}</strong></div>
+        <div class="kv"><span>You can save per month</span><strong>${cap?money(cap):"Not set"}</strong></div>
+        ${cap?`<div class="meter ${totals.monthly>cap?"warn":""}" style="margin-top:8px"><i style="width:${capPct}%"></i></div>`:""}
+        ${capMsg}${ovMsg}${pastMsg}
+      </div>
+      ${goalBlock}
+    </div>
+  </div>
+  <div class="panel" style="margin-bottom:16px"><h2>Next ${state.settings.horizon} months</h2>${timelineHTML()}</div>
+  <div class="panel"><div class="row" style="margin-bottom:8px"><h2 style="margin:0">Savings by trip</h2><span class="spacer"></span><button class="btn" data-act="add">Add a trip</button></div>
+    ${sortedTrips(act).length?sortedTrips(act).map(t=>{const c=calc(t);return `<button class="trip-card" data-open="${t.id}" style="border-left-color:${esc(t.color)};margin-top:10px">
+      <div class="row"><h3>${esc(tripTitle(t))}</h3><span class="spacer"></span><span class="chip">${STATUS[t.status].label}</span></div>
+      <div class="kv"><span>${money(c.saved)} saved of ${money(c.budget)}</span><strong>${Math.round(c.pct)}%</strong></div>
+      <div class="meter" style="margin-top:6px"><i style="width:${c.pct}%;background:${esc(t.color)}"></i></div>
+      <div class="kv"><span>${dueText(c)}</span><strong>${c.dueState==="ok"&&c.remaining>0?money(c.monthly)+"/mo":""}</strong></div>
+    </button>`;}).join(""):`<p class="muted">No active trips yet.</p>`}
+  </div>`;
+  if(currentTab==="dash")renderMap();
+}
+function dueText(c){
+  if(c.dueState==="nodate")return"Add dates to get a monthly target";
+  if(c.dueState==="past")return"Start date has passed";
+  if(c.dueState==="done")return"Completed";
+  if(c.remaining<=0)return"Fully saved";
+  return `${c.monthsLeft} month${c.monthsLeft>1?"s":""} to save`;
+}
+
+function timelineHTML(){
+  const H=Math.max(6,Math.min(60,parseInt(state.settings.horizon)||24));
+  const now=today();const start=new Date(now.getFullYear(),now.getMonth(),1);const end=new Date(start.getFullYear(),start.getMonth()+H,1);
+  const span=end-start;
+  let months="";
+  for(let i=0;i<H;i++){const d=new Date(start.getFullYear(),start.getMonth()+i,1);const jan=d.getMonth()===0||i===0;months+=`<div class="${jan?"year":""}">${d.toLocaleDateString(undefined,{month:"short"})}${jan?" "+String(d.getFullYear()).slice(-2):""}</div>`;}
+  const list=sortedTrips(state.trips).filter(t=>parseDate(t.start));
+  const inRange=list.filter(t=>{const s=parseDate(t.start),e=parseDate(t.end)||s;return e>=start&&s<end;});
+  const rows=inRange.map(t=>{
+    const s=Math.max(parseDate(t.start),start),e=Math.min((parseDate(t.end)||parseDate(t.start)).getTime()+86400000,end.getTime());
+    const left=(s-start)/span*100,width=Math.max(1.2,(e-s)/span*100);
+    const bg=t.status==="done"?cssVar("--muted"):t.color;
+    return `<div class="tl-row"><button class="tl-bar" data-open="${t.id}" style="left:${left}%;width:${width}%;background:${esc(bg)}" title="${esc(tripTitle(t))}: ${fmtDate(t.start)}">${esc(tripTitle(t))}</button></div>`;
+  }).join("");
+  const todayLeft=(now-start)/span*100;
+  const outside=list.length-inRange.length;
+  return `<div class="tl-scroll"><div class="tl"><div class="tl-months" style="grid-template-columns:repeat(${H},1fr)">${months}</div>
+    <div class="tl-rows">${rows||`<p class="muted small" style="margin:8px">Trips with dates appear here.</p>`}<div class="tl-today" style="left:${todayLeft}%" title="Today"></div></div></div></div>
+    ${outside?`<p class="small muted" style="margin:6px 0 0">${outside} trip${outside>1?"s are":" is"} outside this window. Change the planning window in Goals & settings.</p>`:""}`;
+}
+
+/* ---------- Map ---------- */
+let mapObj=null;
+function renderMap(){
+  const host=document.getElementById("map");if(!host)return;
+  const pins=state.trips.filter(t=>t.lat!=null&&t.lng!=null);
+  host.innerHTML="";mapObj=null;
+  document.querySelectorAll(".jvm-tooltip").forEach(n=>n.remove());
+  if(typeof window.jsVectorMap==="function"){
+    try{
+      mapObj=new jsVectorMap({
+        selector:"#map",map:"world",zoomButtons:true,zoomOnScroll:false,backgroundColor:"transparent",
+        regionStyle:{initial:{fill:cssVar("--land"),stroke:cssVar("--paper"),strokeWidth:.4,fillOpacity:1},hover:{fillOpacity:.85,cursor:"default"}},
+        markers:pins.map(t=>({name:tripTitle(t)+(t.start?" — "+fmtDate(t.start):""),coords:[t.lat,t.lng],style:{fill:statusColor(t)}})),
+        markerStyle:{initial:{r:7,stroke:cssVar("--paper"),strokeWidth:2.5,fill:cssVar("--teal")},hover:{r:9,cursor:"pointer"}},
+        onMarkerClick:function(e,i){const t=pins[Number(i)];if(t)openEditor(t.id);}
+      });
+      return;
+    }catch(e){host.innerHTML="";}
+  }
+  // Fallback: simple projected map with grid
+  const W=360,H=180;let g="";
+  for(let x=0;x<=360;x+=30)g+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="var(--line)" stroke-width=".4"/>`;
+  for(let y=0;y<=180;y+=30)g+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="var(--line)" stroke-width=".4"/>`;
+  const dots=pins.map(t=>`<g class="pin" data-open="${t.id}" style="cursor:pointer"><circle cx="${t.lng+180}" cy="${90-t.lat}" r="4" fill="${statusColor(t)}" stroke="var(--paper)" stroke-width="1.2"/><text x="${t.lng+186}" y="${92-t.lat}" font-size="6" fill="var(--ink)" font-family="Figtree,sans-serif">${esc(tripTitle(t))}</text></g>`).join("");
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">${g}<line x1="0" y1="90" x2="${W}" y2="90" stroke="var(--muted)" stroke-width=".5" stroke-dasharray="2 2"/>${dots}</svg>`;
+}
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(currentTab==="dash")renderMap();});
+
+/* ---------- Trips tab ---------- */
+let tripFilter="active";
+function renderTrips(){
+  const el=$("#tab-trips");
+  let list=state.trips;
+  if(tripFilter==="active")list=activeTrips();
+  else if(tripFilter!=="all")list=state.trips.filter(t=>t.status===tripFilter);
+  list=sortedTrips(list);
+  const filters=[["active","Active"],["all","All"],["dream","Dream"],["planning","Planning"],["booked","Booked"],["done","Completed"]];
+  el.innerHTML=`<div class="row" style="margin-bottom:12px"><h2 style="margin:0">Your trips</h2><span class="spacer"></span><button class="btn primary" data-act="add">Add a trip</button></div>
+  <div class="row" style="margin-bottom:14px" role="group" aria-label="Filter trips">${filters.map(f=>`<button class="btn ${tripFilter===f[0]?"primary":""}" data-filter="${f[0]}" style="padding:6px 12px">${f[1]}</button>`).join("")}</div>
+  ${list.length?`<div class="trip-list">${list.map(t=>{const c=calc(t);return `<button class="trip-card" data-open="${t.id}" style="border-left-color:${esc(t.color)}">
+    <div class="row"><h3>${esc(tripTitle(t))}</h3><span class="spacer"></span><span class="chip">${STATUS[t.status].label}</span></div>
+    <div class="small muted">${esc([t.dest!==t.name?t.dest:"",t.country].filter(Boolean).join(", "))}${t.start?(t.dest||t.country?" · ":"")+fmtDate(t.start):""}</div>
+    <div class="kv"><span>Budget</span><strong>${money(c.budget)}</strong></div>
+    <div class="kv"><span>Saved</span><strong>${money(c.saved)} (${Math.round(c.pct)}%)</strong></div>
+    <div class="kv"><span>Spent</span><strong>${money(c.spent)}</strong></div>
+    <div class="kv"><span>${dueText(c)}</span><strong>${c.dueState==="ok"&&c.remaining>0?money(c.monthly)+"/mo":""}</strong></div>
+    ${c.overCats.length?`<div class="flag">Over budget: ${esc(c.overCats.join(", "))}</div>`:""}
+  </button>`;}).join("")}</div>`:`<div class="panel"><p style="margin:0 0 10px">No trips here yet.</p><button class="btn primary" data-act="add">Add a trip</button></div>`}`;
+}
+
+/* ---------- Settings tab ---------- */
+function renderSettings(){
+  const el=$("#tab-settings");const s=state.settings;
+  el.innerHTML=`<div class="grid two">
+  <div class="panel"><h2>Travel goal</h2>
+    <label class="f">What I'm working toward<textarea data-set="goal" placeholder="e.g. See three new countries before 2028 and pay cash for every trip">${esc(s.goal)}</textarea></label>
+    <div class="fields c2">
+      <label class="f">Total savings goal (optional)<input type="number" inputmode="decimal" min="0" step="1" data-set="goalAmount" value="${s.goalAmount||""}" placeholder="0"></label>
+      <label class="f">I can save per month<input type="number" inputmode="decimal" min="0" step="1" data-set="capacity" value="${s.capacity||""}" placeholder="0"></label>
+    </div>
+  </div>
+  <div class="panel"><h2>Settings</h2>
+    <div class="fields c2">
+      <label class="f">Currency symbol<input data-set="currency" value="${esc(s.currency)}" maxlength="4"></label>
+      <label class="f">Planning window (months)<input type="number" min="6" max="60" data-set="horizon" value="${s.horizon}"></label>
+    </div>
+    <label class="f">Appearance<select data-set="theme"><option value="auto" ${s.theme==="auto"?"selected":""}>Match my device</option><option value="light" ${s.theme==="light"?"selected":""}>Light</option><option value="dark" ${s.theme==="dark"?"selected":""}>Dark</option></select></label>
+  </div>
+  <div class="panel"><h2>Backup</h2>
+    <p class="muted small" style="margin-top:0">Your plan saves automatically in this browser. Export a backup now and then, and use Import on another phone or computer to bring your plan over.</p>
+    <div class="row">
+      <button class="btn" data-act="export">Export backup</button>
+      <label class="btn" style="cursor:pointer">Import backup<input type="file" accept=".json,application/json" id="importFile" class="hidden"></label>
+      <button class="btn danger" data-act="reset">Erase everything</button>
+    </div>
+  </div></div>`;
+}
+
+/* ---------- Editor ---------- */
+function newTrip(){
+  const t=normalize({trips:[{}]}).trips[0];
+  t.color=COLORS[state.trips.length%COLORS.length];
+  state.trips.push(t);scheduleSave();return t;
+}
+function exampleTrip(){
+  const t=newTrip();const now=today();
+  const s=new Date(now.getFullYear(),now.getMonth()+9,12),e=new Date(s.getFullYear(),s.getMonth(),19);
+  Object.assign(t,{name:"Spring in Paris",dest:"Paris",country:"France",lat:48.86,lng:2.35,start:iso(s),end:iso(e),status:"planning",priority:"high",
+    budget:{transport:900,lodging:1200,food:600,shopping:300},saved:[{id:uid(),date:iso(now),amount:250,note:"First deposit"}],expenses:[],notes:"Example trip — edit or delete it anytime."});
+  scheduleSave();
+}
+function getTrip(id){return state.trips.find(t=>t.id===id);}
+function openEditor(id){
+  editingId=id;renderEditor();
+  $("#sheet").classList.add("open");$("#sheetBg").classList.add("open");document.body.style.overflow="hidden";
+  setTimeout(()=>{const f=$("#sheetBody input");if(f&&!getTrip(id).name&&!getTrip(id).dest)f.focus();},50);
+}
+function closeEditor(){
+  $("#sheet").classList.remove("open");$("#sheetBg").classList.remove("open");document.body.style.overflow="";
+  const t=getTrip(editingId);
+  if(t&&!t.name&&!t.dest&&!calc(t).budget&&!t.saved.length&&!t.expenses.length){state.trips=state.trips.filter(x=>x!==t);scheduleSave();}
+  editingId=null;renderAll();
+}
+function renderEditor(){
+  const t=getTrip(editingId);if(!t)return;const c=calc(t);
+  $("#sheetTitle").textContent=tripTitle(t);
+  const body=$("#sheetBody");
+  body.innerHTML=`
+  <div class="panel"><h3>Details</h3>
+    <label class="f">Trip name<input data-f="name" value="${esc(t.name)}" placeholder="e.g. Girls' trip to Lisbon"></label>
+    <div class="suggest"><label class="f">Destination<input data-f="dest" value="${esc(t.dest)}" placeholder="Start typing a city" autocomplete="off"></label><div class="suggest-list" id="suggest"></div></div>
+    <div class="fields c2">
+      <label class="f">Country<input data-f="country" value="${esc(t.country)}"></label>
+      <label class="f">Travelers<input type="number" min="1" data-f="travelers" value="${t.travelers}"></label>
+      <label class="f">Start date<input type="date" data-f="start" value="${esc(t.start)}"></label>
+      <label class="f">End date<input type="date" data-f="end" value="${esc(t.end)}" min="${esc(t.start)}"></label>
+      <label class="f">Status<select data-f="status">${Object.keys(STATUS).map(k=>`<option value="${k}" ${t.status===k?"selected":""}>${STATUS[k].label}</option>`).join("")}</select></label>
+      <label class="f">Priority<select data-f="priority">${["high","medium","low"].map(p=>`<option value="${p}" ${t.priority===p?"selected":""}>${p[0].toUpperCase()+p.slice(1)}</option>`).join("")}</select></label>
+    </div>
+    <details><summary class="small muted" style="cursor:pointer;margin-bottom:8px">Map location ${t.lat!=null?"(set)":"(not set)"}</summary>
+      <div class="fields c2"><label class="f">Latitude<input type="number" step="any" data-f="lat" value="${t.lat??""}" placeholder="e.g. 48.86"></label><label class="f">Longitude<input type="number" step="any" data-f="lng" value="${t.lng??""}" placeholder="e.g. 2.35"></label></div>
+      <p class="small muted" style="margin:0 0 8px">Not in the city list? Search the place in any maps app, copy its coordinates, and paste them here.</p>
+    </details>
+    <div class="f" style="font-size:.85rem;font-weight:600">Color<div class="colors">${COLORS.map(col=>`<button type="button" data-color="${col}" aria-pressed="${t.color===col}" aria-label="Color ${col}" style="background:${col}"></button>`).join("")}</div></div>
+  </div>
+
+  <div class="panel"><h3>Budget vs. spending</h3>
+    <div style="overflow-x:auto"><table class="cat-table"><thead><tr><th>Category</th><th>Budget</th><th>Spent</th><th>Left</th></tr></thead><tbody>
+    ${CATS.map(([k,l])=>{const left=num(t.budget[k])-c.spentBy[k];return `<tr><td>${l}</td><td><input type="number" inputmode="decimal" min="0" step="1" data-b="${k}" value="${t.budget[k]||""}" placeholder="0" aria-label="${l} budget"></td><td>${money(c.spentBy[k])}</td><td class="${left<0?"over":""}" id="left-${k}">${money(left)}</td></tr>`;}).join("")}
+    <tr><td><b>Total</b></td><td id="bTotal"><b>${money(c.budget)}</b></td><td><b>${money(c.spent)}</b></td><td class="${c.budget-c.spent<0?"over":""}"><b>${money(c.budget-c.spent)}</b></td></tr>
+    </tbody></table></div>
+    ${t.travelers>1&&c.budget?`<p class="small muted" style="margin:8px 0 0">About ${money(c.budget/t.travelers)} per person.</p>`:""}
+  </div>
+
+  <div class="panel"><h3>Savings plan</h3>
+    <div id="planSummary">${planSummary(t)}</div>
+    <div class="row" style="margin:12px 0 8px"><h3 style="margin:0">Deposits</h3><span class="spacer"></span><button class="btn" data-log="saved">Add deposit</button></div>
+    <div class="log">${t.saved.length?t.saved.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(r=>logRow(r,"saved")).join(""):`<p class="small muted" style="margin:0">Log money as you set it aside for this trip.</p>`}</div>
+  </div>
+
+  <div class="panel"><h3>Expenses</h3>
+    <div class="row" style="margin-bottom:8px"><span class="small muted">Track deposits, bookings and spending during the trip.</span><span class="spacer"></span><button class="btn" data-log="expenses">Add expense</button></div>
+    <div class="log">${t.expenses.length?t.expenses.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(r=>logRow(r,"expenses")).join(""):`<p class="small muted" style="margin:0">No expenses yet.</p>`}</div>
+  </div>
+
+  <div class="panel"><h3>Notes</h3><label class="f" style="margin:0"><textarea data-f="notes" placeholder="Ideas, must-sees, packing reminders, booking numbers…" aria-label="Notes">${esc(t.notes)}</textarea></label></div>`;
+}
+function planSummary(t){
+  const c=calc(t);
+  let msg;
+  if(!c.budget)msg=`<div class="alert info">Add budget amounts above to calculate your monthly target.</div>`;
+  else if(c.dueState==="nodate")msg=`<div class="alert info">Add a start date to calculate how much to save each month.</div>`;
+  else if(c.dueState==="past")msg=`<div class="alert info">The start date has passed. Mark the trip completed or choose new dates.</div>`;
+  else if(c.dueState==="done")msg=`<div class="alert ok">Trip completed.</div>`;
+  else if(c.remaining<=0)msg=`<div class="alert ok">Fully saved — ${money(c.saved-c.budget)} extra cushion.</div>`;
+  else msg=`<div class="alert ok">Save <b>${money(c.monthly)}</b> a month for ${c.monthsLeft} month${c.monthsLeft>1?"s":""} to be ready by ${fmtDate(t.start)}.</div>`;
+  return `<div class="kv"><span>Saved</span><strong>${money(c.saved)} of ${money(c.budget)}</strong></div>
+    <div class="meter" style="margin-top:6px"><i style="width:${c.pct}%;background:${esc(t.color)}"></i></div>
+    <div class="kv"><span>Still needed</span><strong>${money(c.remaining)}</strong></div>${msg}`;
+}
+function logRow(r,kind){
+  return `<div class="log-row ${kind==="expenses"?"exp":""}" data-row="${r.id}" data-kind="${kind}">
+    <input type="date" data-l="date" value="${esc(r.date)}" aria-label="Date">
+    ${kind==="expenses"?`<select data-l="cat" aria-label="Category">${CATS.map(([k,l])=>`<option value="${k}" ${r.cat===k?"selected":""}>${l}</option>`).join("")}</select>`:""}
+    <input type="number" inputmode="decimal" step="0.01" min="0" data-l="amount" value="${r.amount||""}" placeholder="Amount" aria-label="Amount">
+    <input class="note" data-l="note" value="${esc(r.note)}" placeholder="Note" aria-label="Note">
+    <button class="btn ghost del" data-del="${r.id}" aria-label="Remove">Remove</button>
+  </div>`;
+}
+function refreshEditorNumbers(){
+  const t=getTrip(editingId);if(!t)return;const c=calc(t);
+  CATS.forEach(([k])=>{const cell=document.getElementById("left-"+k);if(cell){const left=num(t.budget[k])-c.spentBy[k];cell.textContent=money(left);cell.classList.toggle("over",left<0);}});
+  const bt=$("#bTotal");if(bt)bt.innerHTML="<b>"+money(c.budget)+"</b>";
+  const ps=$("#planSummary");if(ps)ps.innerHTML=planSummary(t);
+  $("#sheetTitle").textContent=tripTitle(t);
+}
+
+/* ---------- Events ---------- */
+document.addEventListener("click",e=>{
+  const a=e.target.closest("[data-act]");
+  if(a){
+    const act=a.dataset.act;
+    if(act==="add"){const t=newTrip();openEditor(t.id);}
+    else if(act==="example"){exampleTrip();renderAll();toast("Example trip added");}
+    else if(act==="export")exportData();
+    else if(act==="reset"){if(confirm("Erase all trips, savings and settings? This can't be undone.")){state=defaultState();applyTheme();scheduleSave();renderAll();toast("Everything erased");}}
+    return;
+  }
+  const o=e.target.closest("[data-open]");if(o){openEditor(o.dataset.open);return;}
+  const f=e.target.closest("[data-filter]");if(f){tripFilter=f.dataset.filter;renderTrips();return;}
+  const t=getTrip(editingId);
+  if(!t)return;
+  const col=e.target.closest("[data-color]");
+  if(col){t.color=col.dataset.color;document.querySelectorAll("[data-color]").forEach(b=>b.setAttribute("aria-pressed",String(b===col)));refreshEditorNumbers();scheduleSave();return;}
+  const lg=e.target.closest("[data-log]");
+  if(lg){const k=lg.dataset.log;const row={id:uid(),date:iso(today()),amount:0,note:""};if(k==="expenses")row.cat="transport";t[k].push(row);scheduleSave();renderEditor();const n=document.querySelector(`[data-row="${row.id}"] [data-l="amount"]`);if(n)n.focus();return;}
+  const del=e.target.closest("[data-del]");
+  if(del){const rowEl=del.closest("[data-row]");const k=rowEl.dataset.kind;t[k]=t[k].filter(r=>r.id!==del.dataset.del);scheduleSave();renderEditor();return;}
+  const sg=e.target.closest("[data-city]");
+  if(sg){const ci=CITIES[Number(sg.dataset.city)];t.dest=ci[0];t.country=ci[1];t.lat=ci[2];t.lng=ci[3];if(!t.name)t.name="";scheduleSave();renderEditor();return;}
+});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.dataset.set!==undefined){
+    const k=el.dataset.set;let v=el.value;
+    if(["capacity","goalAmount"].includes(k))v=Math.max(0,num(v));
+    if(k==="horizon"){v=parseInt(v)||24;if(v<6||v>60)return;}
+    state.settings[k]=v;if(k==="theme")applyTheme();
+    scheduleSave();renderDash();if(k==="currency")renderTrips();
+    return;
+  }
+  const t=getTrip(editingId);if(!t)return;
+  if(el.dataset.f){
+    const k=el.dataset.f;let v=el.value;
+    if(k==="lat"||k==="lng"){v=v===""?null:num(v);if(v!=null){if(k==="lat")v=Math.max(-85,Math.min(85,v));else v=Math.max(-180,Math.min(180,v));}}
+    if(k==="travelers")v=Math.max(1,parseInt(v)||1);
+    t[k]=v;
+    if(k==="start"){const endIn=document.querySelector('[data-f="end"]');if(endIn){endIn.min=v;if(t.end&&v&&t.end<v){t.end=v;endIn.value=v;}}}
+    if(k==="dest")showSuggest(v);
+    scheduleSave();refreshEditorNumbers();
+    if(k==="status"||k==="travelers")renderEditorSoon();
+    return;
+  }
+  if(el.dataset.b){t.budget[el.dataset.b]=Math.max(0,num(el.value));scheduleSave();refreshEditorNumbers();return;}
+  if(el.dataset.l){
+    const rowEl=el.closest("[data-row]");const r=t[rowEl.dataset.kind].find(x=>x.id===rowEl.dataset.row);if(!r)return;
+    r[el.dataset.l]=el.dataset.l==="amount"?Math.max(0,num(el.value)):el.value;
+    scheduleSave();refreshEditorNumbers();
+  }
+});
+document.addEventListener("change",e=>{
+  if(e.target.id==="importFile")importData(e.target.files[0]);
+  if(e.target.dataset&&e.target.dataset.l==="cat"){const t=getTrip(editingId);if(t){const rowEl=e.target.closest("[data-row]");const r=t.expenses.find(x=>x.id===rowEl.dataset.row);if(r){r.cat=e.target.value;scheduleSave();refreshEditorNumbers();}}}
+});
+let rerenderTimer=null;function renderEditorSoon(){clearTimeout(rerenderTimer);rerenderTimer=setTimeout(()=>{const y=$("#sheetBody").scrollTop;renderEditor();$("#sheetBody").scrollTop=y;},50);}
+function showSuggest(q){
+  const box=$("#suggest");if(!box)return;q=(q||"").trim().toLowerCase();
+  if(q.length<2){box.classList.remove("open");return;}
+  const seen=new Set();const hits=[];
+  CITIES.forEach((c,i)=>{const key=c[0]+c[1];if(seen.has(key))return;if(c[0].toLowerCase().includes(q)||c[1].toLowerCase().startsWith(q)){seen.add(key);hits.push(i);}});
+  if(!hits.length){box.classList.remove("open");return;}
+  box.innerHTML=hits.slice(0,8).map(i=>`<button type="button" data-city="${i}">${esc(CITIES[i][0])}<span class="muted small">, ${esc(CITIES[i][1])}</span></button>`).join("");
+  box.classList.add("open");
+}
+$("#sheetClose").addEventListener("click",closeEditor);
+$("#sheetBg").addEventListener("click",closeEditor);
+$("#sheetDelete").addEventListener("click",()=>{const t=getTrip(editingId);if(!t)return;if(confirm(`Delete "${tripTitle(t)}" and its savings and expense records?`)){state.trips=state.trips.filter(x=>x!==t);scheduleSave();editingId=null;closeEditor();toast("Trip deleted");}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&editingId)closeEditor();});
+
+/* ---------- Backup ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);const a=document.createElement("a");
+  a.href=url;a.download="wander-map-backup-"+iso(today())+".json";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);toast("Backup exported");
+}
+function importData(file){
+  if(!file)return;const r=new FileReader();
+  r.onload=()=>{try{const d=normalize(JSON.parse(r.result));if(!confirm(`Replace your current plan with this backup (${d.trips.length} trips)?`))return;state=d;applyTheme();scheduleSave();renderAll();toast("Backup imported");}catch(e){toast("That file isn't a Wander Map backup");}};
+  r.readAsText(file);
+}
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),2200);}
+
+/* Re-render dashboard on load so countdowns stay fresh */
+connect();
+})();
+</script>
+</body>
+</html>
